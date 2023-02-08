@@ -227,7 +227,7 @@ export default function Clientpage() {
 													_quantity[_index]= parseInt(e.target.value);
 													setQuantity([..._quantity]) 
 													
-												}} minLength={1} maxLength={2} type="number" className="outline-none focus:outline-none text-center w-full bg-gray-300 font-semibold text-md hover:text-black focus:text-black  md:text-basecursor-default flex items-center text-gray-700" name="custom-input-number"></input>
+												}} minLength={1} maxLength={2} type="number" className="outline-none focus:outline-none text-center w-full bg-gray-300 font-semibold text-md hover:text-black focus:text-black  md:text-basecursor-default flex items-center text-gray-700" name="custom-input-number" placeholder="" id={"counter-"+_index}></input>
 												<button onClick={() => {
 													if(quantity[_index] < 99){
 														const _quantity = quantity;
