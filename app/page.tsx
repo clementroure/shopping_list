@@ -19,8 +19,8 @@ export default function Clientpage() {
     const [searchInput, setSearchInput] = useState("ananas")
 	const [input, setInput] = useState("")
 
-	const [dataList, setDataList] = useState<{name:string, quantity: number, imageUrl: string}[]>([])
 	const [list, setList] = useState<{name:string, quantity: number, imageUrl: string}[]>([])
+	const [history, setHistory] = useState<{name:string, quantity: number, imageUrl: string}[]>([])
 	
 	const [quantity, setQuantity] = useState(new Array(24).fill(1))
 
@@ -34,6 +34,10 @@ export default function Clientpage() {
 			const storageList = await JSON.parse(localStorage.getItem('list')!);
 			if(storageList != null)
 			setList(await JSON.parse(localStorage.getItem('list')!))
+
+			const storageHistory = await JSON.parse(localStorage.getItem('history')!);
+			if(storageHistory != null)
+            setHistory(await JSON.parse(localStorage.getItem('history')!));
 			
 			const userId = localStorage.getItem('id');
 			if(userId != null)
@@ -81,6 +85,14 @@ export default function Clientpage() {
 	   localStorage.setItem('list', JSON.stringify(_list));
 	   //console.log(_list)
 
+	   // save changes to history
+	   const _history = history;
+	   console.log(_history)
+	   _history.push({name: _data.product_name, quantity: quantity, imageUrl: _data.image_url});
+	   console.log(_history)
+	   setHistory(_history);
+	   localStorage.setItem('history', JSON.stringify(_history));
+
 	    // save online db
 	    updateListAPI(_list);
 
@@ -90,7 +102,7 @@ export default function Clientpage() {
 	const updateListAPI = async (_list:any) => {
 
 		try{
-			await fetch(`http://localhost:4000/update_list`, {
+			await fetch(`https://shopping-list-backend-sigma.vercel.app/update_list`, {
 				method: 'POST',
 				body: JSON.stringify({
 					id: userId,
@@ -113,7 +125,7 @@ export default function Clientpage() {
 	const getListAPI = async () => {
 
 		try{
-			await fetch(`http://localhost:4000/get_list`, {
+			await fetch(`https://shopping-list-backend-sigma.vercel.app/get_list`, {
 				method: 'POST',
 				body: JSON.stringify({
 					id: userId,
@@ -339,6 +351,13 @@ export default function Clientpage() {
 													];
 													setList(_list);
 												    localStorage.setItem('list', JSON.stringify(_list));
+
+													// save changes to history
+													const _history = history;
+													_history.push({name: product.name, quantity: 0, imageUrl: product.imageUrl});
+													setHistory(_history);
+													localStorage.setItem('history', JSON.stringify(_history));
+
 													// save to online db
 													updateListAPI(_list);
 												}}
