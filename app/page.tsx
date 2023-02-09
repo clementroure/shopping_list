@@ -1,7 +1,7 @@
 "use client"
 
 import useSWR from "swr"
-import { useEffect, useState, Fragment } from "react"
+import { useEffect, useState, Fragment, createRef, useRef } from "react"
 import Link from "next/link"
 import carrefourLogo from "../public/assets/carrefourLogo.png"
 import Image from "next/image"
@@ -26,6 +26,21 @@ export default function Clientpage() {
 
 	// voir panier client
 	const [open, setOpen] = useState(false)
+
+	// popup load a list from db
+	const [loadListInput, setLoadListInput] = useState("")
+	const [loadListPopup, setLoadListPopup] = useState(false)
+	const popupRef = useRef<HTMLDivElement>(null)
+	useEffect(() => {
+		document.addEventListener("click", handleClickOutside, true)
+	  },[]);
+	const handleClickOutside = (e:any) => {
+		if(!popupRef.current?.contains(e.target)){
+			// click outside button
+			console.log("click")
+			setLoadListPopup(false)
+		}
+	}
 
 	// crash if after error !datafect(() => {
 	useEffect(() => {
@@ -87,9 +102,7 @@ export default function Clientpage() {
 
 	   // save changes to history
 	   const _history = history;
-	   console.log(_history)
 	   _history.push({name: _data.product_name, quantity: quantity, imageUrl: _data.image_url});
-	   console.log(_history)
 	   setHistory(_history);
 	   localStorage.setItem('history', JSON.stringify(_history));
 
@@ -122,13 +135,17 @@ export default function Clientpage() {
 	    }catch(e){console.log(e)}
 	}
 
-	const getListAPI = async () => {
+	const getListAPI = async (e:any) => {
+		console.log("ENTER1")
 
+		e.preventDefault();
 		try{
+			console.log("ENTER2")
+
 			await fetch(`https://shopping-list-backend-sigma.vercel.app/get_list`, {
 				method: 'POST',
 				body: JSON.stringify({
-					id: userId,
+					id: loadListInput,
 				}),
 				headers: {
 					'Content-type': 'application/json; charset=UTF-8',
@@ -138,16 +155,44 @@ export default function Clientpage() {
 				.then((data) => {
 				  console.log(data["list"])
 				  setList(data["list"])
+
+				  setLoadListPopup(false)
 				})
 				.catch((err) => {
 				  console.log(err.message);
+				  alert("Cet id n'existe pas dans la base de données")
 			});
-	    }catch(e){console.log(e)}
+	    }
+		catch(e){console.log(e)}
 	}
 
 	if (data) return (
 		<div>	
-		<nav className="bg-white border-gray-200 dark:border-gray-700 px-2 sm:px-4 py-2 rounded w-screen fixed z-50 md:rounded-b-3xl  backdrop-filter bg-clip-padding bg-opacity-60 dark:bg-gray-900 backdrop-blur-xl border-b">
+
+		<nav className="fixed bg-white border-gray-200 dark:border-gray-700 px-2 sm:px-4 py-2 rounded w-screen z-50 md:rounded-b-3xl  backdrop-filter bg-clip-padding bg-opacity-60 dark:bg-gray-900 backdrop-blur-xl border-b">
+			
+			{loadListPopup &&
+			<div id="authentication-modal" aria-hidden="true" className="fixed w-full p-4 z-50 h-screen backdrop-blur-sm delay-100">
+				<div className="relative w-full h-full max-w-md md:h-auto  left-1/2 -translate-x-1/2">
+					<div ref={popupRef} className="relative bg-white rounded-lg shadow dark:bg-gray-700 ">
+						<button onClick={()=>setLoadListPopup(false)} type="button" className="absolute top-3 right-2.5 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-800 dark:hover:text-white" data-modal-hide="authentication-modal">
+							<svg aria-hidden="true" className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+							<span className="sr-only">Close modal</span>
+						</button>
+						<div className="px-6 py-6 lg:px-8">
+							<h3 className="mb-4 text-xl font-medium text-gray-900 dark:text-white">Charger une liste de course</h3>
+							<form className="space-y-6" action="#">
+								<div>
+									<label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Identifiant</label>
+									<input onKeyDown={(e)=> e.key === 'Enter' && getListAPI(e)} onChange={(e) => setLoadListInput(e.target.value)} minLength={36} maxLength={36} type="text" name="id" id="id" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" placeholder="" aria-label="id" required/>
+								</div>
+							</form>
+						</div>
+					</div>
+				</div>
+			</div> 
+            }
+
 			<div className="container flex flex-wrap items-center justify-between mx-auto">
 			<Link href="/" className="flex items-center">
 				<Image draggable={false} src={carrefourLogo} height={window.innerWidth >= 640 ? 40 : 36} alt="Carrefour logo" />
@@ -188,6 +233,11 @@ export default function Clientpage() {
 					</form>
 				</div>
 				<ul className="hidden md:flex flex-col p-4 mt-4 border border-gray-100 rounded-lg  md:flex-row md:space-x-8 md:mt-0 md:text-sm md:font-medium md:border-0  dark:border-gray-700 bg-transparent">
+					<li className="relative hidden xl:block">
+						<svg onClick={() => setLoadListPopup(true)} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" className="w-6 h-6 opacity-90 cursor-pointer hover:-translate-y-1 hover:scale-105">
+							<path stroke-linecap="round" stroke-linejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 0v3.75m-16.5-3.75v3.75m16.5 0v3.75C20.25 16.153 16.556 18 12 18s-8.25-1.847-8.25-4.125v-3.75m16.5 0c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125" />
+						</svg>
+					</li>
 					<li className="relative">
 						<svg onClick={() => setOpen(true)} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" className="w-6 h-6 opacity-90 cursor-pointer hover:-translate-y-1 hover:scale-105">
 							<path stroke-linecap="round" stroke-linejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" />
@@ -269,7 +319,6 @@ export default function Clientpage() {
 				<h1 className="grid h-[85vh] place-items-center">Désolé, aucun produit ne correspond à votre requête.</h1>
 			</div>
             }
-
 
 			<Transition.Root show={open} as={Fragment}>
 				<Dialog as="div" className="relative z-10" onClose={setOpen}>
