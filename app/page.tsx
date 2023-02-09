@@ -1,7 +1,7 @@
 "use client"
 
 import useSWR from "swr"
-import { useEffect, useState, Fragment, createRef, useRef } from "react"
+import { useEffect, useState, Fragment, useRef } from "react"
 import Link from "next/link"
 import carrefourLogo from "../public/assets/carrefourLogo.png"
 import Image from "next/image"
@@ -42,7 +42,6 @@ export default function Clientpage() {
 		}
 	}
 
-	// crash if after error !datafect(() => {
 	useEffect(() => {
 			const init = async () => {
 
@@ -98,7 +97,6 @@ export default function Clientpage() {
 	   }
 
 	   localStorage.setItem('list', JSON.stringify(_list));
-	   //console.log(_list)
 
 	   // save changes to history
 	   const _history = history;
@@ -108,8 +106,6 @@ export default function Clientpage() {
 
 	    // save online db
 	    updateListAPI(_list);
-
-		// getListAPI();
 	}
 
 	const updateListAPI = async (_list:any) => {
